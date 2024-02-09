@@ -1,6 +1,6 @@
 function Scoreboard({ score, hiscore }) {
   return (
-    <div className="scoreboard">
+    <div id="scoreboard">
       <span id="score">Score: {score}</span>
       <span id="hiscore">High score: {hiscore}</span>
     </div>

@@ -4,6 +4,7 @@ import MathUtil from "./Utilities";
 
 import Card from "./components/Card";
 import Scoreboard from "./components/Scoreboard";
+import Gameover from "./components/Gameover";
 
 function App() {
   //NON STATE VARIABLES
@@ -18,11 +19,12 @@ function App() {
   const score = useRef(0);
   const hiscore = useRef(0);
 
-  const [isGameOver, setIsGameOver] = useState(true);
+  const [isGameOver, setIsGameOver] = useState(false);
+  const [isGameReset, setIsGameReset] = useState(true);
 
   useEffect(() => {
-    if (isGameOver) {
-      setIsGameOver(false);
+    if (isGameReset) {
+      setIsGameReset(false);
       const randomPage = MathUtil.RandRange(pages);
       fetch(snApiBaseURL + randomPage, {
         method: "GET",
@@ -37,7 +39,7 @@ function App() {
           setCharacters(data.data);
         });
     }
-  }, [isGameOver]);
+  }, [isGameReset]);
 
   //EVENTS
   function handleCardClick(e) {
@@ -56,15 +58,27 @@ function App() {
       score.current = newVisitiedCharacters.length;
       if (score.current >= hiscore.current)
         hiscore.current = newVisitiedCharacters.length;
-      visitedCharacters.current = newVisitiedCharacters;
 
-      shuffleCharacters();
+      if (score.current === 10) {
+        score.current = 0;
+        visitedCharacters.current = [];
+        setCharacters(null);
+        setIsGameOver(true);
+      } else {
+        visitedCharacters.current = newVisitiedCharacters;
+        shuffleCharacters();
+      }
     } else {
       score.current = 0;
       visitedCharacters.current = [];
       setCharacters(null);
       setIsGameOver(true);
     }
+  }
+
+  function handleGameReset() {
+    setIsGameOver(false);
+    setIsGameReset(true);
   }
 
   function shuffleCharacters() {
@@ -80,29 +94,33 @@ function App() {
     setCharacters(newCharacters);
   }
 
-  return (
-    <>
-      <header>
-        <h2>Supernatural Memory Game</h2>
-      </header>
-      <Scoreboard score={score.current} hiscore={hiscore.current} />
-      <div id="game">
-        {characters
-          ? characters.map((character) => {
-              return (
-                <Card
-                  name={character.name}
-                  src={character.img}
-                  id={character.id}
-                  key={character.id}
-                  onCLick={handleCardClick}
-                />
-              );
-            })
-          : "Loading..."}
-      </div>
-    </>
-  );
+  if (!isGameOver) {
+    return (
+      <>
+        <header>
+          <h2>Supernatural Memory Game</h2>
+        </header>
+        <Scoreboard score={score.current} hiscore={hiscore.current} />
+        <div id="game">
+          {characters
+            ? characters.map((character) => {
+                return (
+                  <Card
+                    name={character.name}
+                    src={character.img}
+                    id={character.id}
+                    key={character.id}
+                    onCLick={handleCardClick}
+                  />
+                );
+              })
+            : "Loading..."}
+        </div>
+      </>
+    );
+  } else {
+    return <Gameover onClick={handleGameReset} />;
+  }
 }
 
 export default App;
